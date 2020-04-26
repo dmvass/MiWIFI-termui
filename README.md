@@ -1,3 +1,3 @@
 # MiWIFI terminal UI
 
-![screenshot](demo.png?raw=true)
+![screenshot](demo.jpg?raw=true)
