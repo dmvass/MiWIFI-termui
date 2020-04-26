@@ -8,9 +8,10 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-cli/client"
+	"miwifi-termui/client"
 )
 
+// NewMEMController creates and returns memory status UI controller.
 func NewMEMController(streamStat StreamStatRead) *memController {
 	return &memController{
 		Grid:       ui.NewGrid(),
@@ -70,7 +71,7 @@ func (c *memController) subscribe(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case s := <-c.streamStat:
 				c.update(s)
 			}

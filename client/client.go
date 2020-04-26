@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// Stat is a status container entity.
 type Stat struct {
 	Devices     []DeviceStat `json:"dev"`
 	Code        int          `json:"code"`
@@ -20,6 +21,7 @@ type Stat struct {
 	WAN         WANStat      `json:"wan"`
 }
 
+// DeviceStat is a connected device status entity.
 type DeviceStat struct {
 	Mac              string `json:"mac"`
 	MaxDownloadSpeed uint64 `json:"maxdownloadspeed,string"`
@@ -32,6 +34,7 @@ type DeviceStat struct {
 	Name             string `json:"devname"`
 }
 
+// MemStat is a device memory status entity.
 type MemStat struct {
 	Usage float64 `json:"usage"`
 	Total string  `json:"total"`
@@ -39,11 +42,13 @@ type MemStat struct {
 	Type  string  `json:"type"`
 }
 
+// CountStat is a connected devices status entity.
 type CountStat struct {
 	All    int `json:"all"`
 	Online int `json:"online"`
 }
 
+// HardwareStat is a device hardware info entity.
 type HardwareStat struct {
 	Mac      string `json:"mac"`
 	Platform string `json:"platform"`
@@ -52,12 +57,14 @@ type HardwareStat struct {
 	SN       string `json:"sn"`
 }
 
+// CPUStat is a device CPU status entity.
 type CPUStat struct {
 	Core int     `json:"core"`
 	Hz   string  `json:"hz"`
 	Load float64 `json:"load"`
 }
 
+// WANStat is a device WAN status entity.
 type WANStat struct {
 	MaxDownloadSpeed uint64 `json:"maxdownloadspeed,string"`
 	MaxUploadSpeed   uint64 `json:"maxuploadspeed,string"`
@@ -69,6 +76,7 @@ type WANStat struct {
 	History          string `json:"history"`
 }
 
+// Band is a bandwidth testing result entity.
 type Band struct {
 	Manual     int     `json:"manual"`
 	Code       int     `json:"code"`
@@ -78,24 +86,27 @@ type Band struct {
 	Upload     float64 `json:"upload"`
 }
 
+// New creates and returns new MiWIFI client.
 func New(macAddress, host string, httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 	return &Client{
 		httpClient: httpClient,
-		macAddress: macAddress,
 		host:       host,
+		nonce:      generateNonce(macAddress),
 	}
 }
 
+// Client is MiWIFI client.
 type Client struct {
 	httpClient *http.Client
-	macAddress string
 	host       string
+	nonce      string
 	token      string
 }
 
+// Login makes client authorization by username and password.
 func (c *Client) Login(username, password string) error {
 	url, err := c.buildURL("/api/xqsystem/login", false)
 	if err != nil {
@@ -107,13 +118,11 @@ func (c *Client) Login(username, password string) error {
 		return fmt.Errorf("can't build request: %w", err)
 	}
 
-	nonce := generateNonce(c.macAddress)
-
 	q := req.URL.Query()
 	q.Add("username", username)
-	q.Add("password", hashPassword(password, nonce))
+	q.Add("password", hashPassword(password, c.nonce))
 	q.Add("logtype", "2")
-	q.Add("nonce", nonce)
+	q.Add("nonce", c.nonce)
 	req.URL.RawQuery = q.Encode()
 
 	payload := struct {
@@ -124,11 +133,15 @@ func (c *Client) Login(username, password string) error {
 		return err
 	}
 
+	if payload.Token == "" {
+		return errors.New("invalid token")
+	}
 	c.token = payload.Token
 
 	return nil
 }
 
+// Logout makes client logout and destroys current token.
 func (c *Client) Logout() error {
 	url, err := c.buildURL("/web/logout", true)
 	if err != nil {
@@ -144,9 +157,11 @@ func (c *Client) Logout() error {
 		return err
 	}
 
+	c.token = ""
 	return nil
 }
 
+// Status returns device status.
 func (c *Client) Status() (Stat, error) {
 	var stat Stat
 
@@ -167,6 +182,7 @@ func (c *Client) Status() (Stat, error) {
 	return stat, nil
 }
 
+// BandwidthTest makes bandwidth testing or returns last history result.
 func (c *Client) BandwidthTest(history bool) (Band, error) {
 	var band Band
 
@@ -201,6 +217,10 @@ func (c Client) do(req *http.Request, payload interface{}) error {
 		return fmt.Errorf("request error: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return fmt.Errorf("unexpected response status code: %d", resp.StatusCode)
+	}
 
 	if payload == nil {
 		return nil // do nothing with response

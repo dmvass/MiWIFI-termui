@@ -8,10 +8,11 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-cli/client"
-	"miwifi-cli/humanize"
+	"miwifi-termui/client"
+	"miwifi-termui/humanize"
 )
 
+// NewNETController creates and returns network status UI controller.
 func NewNETController(streamStat StreamStatRead, streamBand StreamBandRead) *netController {
 	return &netController{
 		Grid:       ui.NewGrid(),
@@ -97,7 +98,7 @@ func (c *netController) subscribe(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case b = <-c.streamBand:
 			case s := <-c.streamStat:
 				c.update(s, b)

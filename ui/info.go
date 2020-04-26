@@ -7,9 +7,10 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-cli/client"
+	"miwifi-termui/client"
 )
 
+// NewInfoController creates and returns info UI controller.
 func NewInfoController(streamStat StreamStatRead) *infoController {
 	return &infoController{
 		Grid:       ui.NewGrid(),
@@ -59,7 +60,7 @@ func (c *infoController) subscribe(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case s := <-c.streamStat:
 				c.update(s)
 			}

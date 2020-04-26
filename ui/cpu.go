@@ -8,9 +8,10 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-cli/client"
+	"miwifi-termui/client"
 )
 
+// NewCPUController creates and returns CPU status UI controller.
 func NewCPUController(streamStat StreamStatRead) *cpuController {
 	return &cpuController{
 		Grid:       ui.NewGrid(),
@@ -25,8 +26,6 @@ type cpuController struct {
 
 	bodyPlot *widgets.Plot
 	footText *widgets.Paragraph
-
-	plotSize int
 
 	streamStat StreamStatRead
 	once       sync.Once
@@ -72,7 +71,7 @@ func (c *cpuController) subscribe(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case s := <-c.streamStat:
 				c.update(s)
 			}

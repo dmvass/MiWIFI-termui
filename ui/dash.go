@@ -6,7 +6,7 @@ import (
 
 	ui "github.com/gizak/termui/v3"
 
-	"miwifi-cli/client"
+	"miwifi-termui/client"
 )
 
 func NewDashboard(streamStat StreamStatRead, streamBand StreamBandRead) *dashboardController {
@@ -94,7 +94,7 @@ func (c *dashboardController) subscribe(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case s := <-c.streamStat:
 				for _, stream := range c.streamsStat {
 					stream <- s

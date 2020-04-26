@@ -9,12 +9,13 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-cli/client"
-	"miwifi-cli/humanize"
+	"miwifi-termui/client"
+	"miwifi-termui/humanize"
 )
 
 const maxDevices = 16
 
+// NewDevController creates and returns devices status UI controller.
 func NewDevController(streamStat StreamStatRead) *devController {
 	return &devController{
 		Grid:       ui.NewGrid(),
@@ -104,7 +105,7 @@ func (c *devController) subscribe(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case s := <-c.streamStat:
 				c.update(s)
 			}
