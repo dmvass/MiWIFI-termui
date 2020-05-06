@@ -5,7 +5,7 @@ import (
 
 	ui "github.com/gizak/termui/v3"
 
-	"miwifi-termui/client"
+	"miwifi-termui/internal/client"
 )
 
 // Read streams to update UI controllers.

@@ -7,7 +7,7 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-termui/client"
+	"miwifi-termui/internal/client"
 )
 
 // NewInfoController creates and returns info UI controller.

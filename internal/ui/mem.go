@@ -8,12 +8,12 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-termui/client"
+	"miwifi-termui/internal/client"
 )
 
-// NewCPUController creates and returns CPU status UI controller.
-func NewCPUController(streamStat StreamStatRead) *cpuController {
-	return &cpuController{
+// NewMEMController creates and returns memory status UI controller.
+func NewMEMController(streamStat StreamStatRead) *memController {
+	return &memController{
 		Grid:       ui.NewGrid(),
 		bodyPlot:   widgets.NewPlot(),
 		footText:   widgets.NewParagraph(),
@@ -21,7 +21,7 @@ func NewCPUController(streamStat StreamStatRead) *cpuController {
 	}
 }
 
-type cpuController struct {
+type memController struct {
 	*ui.Grid
 
 	bodyPlot *widgets.Plot
@@ -31,18 +31,18 @@ type cpuController struct {
 	once       sync.Once
 }
 
-func (c *cpuController) Resize() {
+func (c *memController) Resize() {
 	w, h := ui.TerminalDimensions()
 	c.Grid.SetRect(0, 0, w, h)
 }
 
-func (c *cpuController) Init(ctx context.Context) {
+func (c *memController) Init(ctx context.Context) {
 	c.initUI()
 	go c.subscribe(ctx)
 }
 
-func (c *cpuController) initUI() {
-	c.bodyPlot.Title = "CPU"
+func (c *memController) initUI() {
+	c.bodyPlot.Title = "Storage"
 	c.bodyPlot.Data = [][]float64{make([]float64, 2)}
 	c.bodyPlot.AxesColor = ui.ColorWhite
 	c.bodyPlot.LineColors[0] = ui.ColorGreen
@@ -56,17 +56,17 @@ func (c *cpuController) initUI() {
 	)
 }
 
-func (c *cpuController) update(s client.Stat) {
-	if len(c.bodyPlot.Data[0]) > c.bodyPlot.Dx() {
+func (c *memController) update(s client.Stat) {
+	if len(c.bodyPlot.Data[0]) >= c.bodyPlot.Dx() {
 		c.bodyPlot.Data[0] = c.bodyPlot.Data[0][1:]
 	}
-	c.bodyPlot.Data[0] = append(c.bodyPlot.Data[0], s.CPU.Load)
+	c.bodyPlot.Data[0] = append(c.bodyPlot.Data[0], s.Mem.Usage)
 
-	format := "CPU: %d | Load: %.2f%% | Core frequency: %s"
-	c.footText.Text = fmt.Sprintf(format, s.CPU.Core, s.CPU.Load*100.0, s.CPU.Hz)
+	format := "Storage: %s | Usage: %.2f%% | Type: %s | Frequency: %s"
+	c.footText.Text = fmt.Sprintf(format, s.Mem.Total, s.Mem.Usage*100.0, s.Mem.Type, s.Mem.Hz)
 }
 
-func (c *cpuController) subscribe(ctx context.Context) {
+func (c *memController) subscribe(ctx context.Context) {
 	c.once.Do(func() {
 		for {
 			select {

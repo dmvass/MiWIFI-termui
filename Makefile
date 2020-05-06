@@ -1,4 +1,4 @@
-NAME=miwifi-termui
+NAME=miwifi
 WRKDIR=$(pwd)
 VERSION=$(shell git describe --tags || echo n/a)
 
@@ -11,7 +11,7 @@ clean:
 	rm -rf $(WRKDIR)/build/
 
 build: clean
-	go build -ldflags "-s -X main.version=$(VERSION)" -o bin/$(NAME) ./cmd/$(NAME)
+	go build -ldflags "-s -X main.version=$(VERSION)" -o bin/$(NAME) .
 
 lint:
 	golangci-lint run

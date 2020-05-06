@@ -6,7 +6,7 @@ import (
 
 	ui "github.com/gizak/termui/v3"
 
-	"miwifi-termui/client"
+	"miwifi-termui/internal/client"
 )
 
 func NewDashboard(streamStat StreamStatRead, streamBand StreamBandRead) *dashboardController {

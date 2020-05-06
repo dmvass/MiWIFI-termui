@@ -1,32 +1,21 @@
-package main
+package app
 
 import (
-	"bufio"
-	"bytes"
 	"context"
-	"errors"
-	"flag"
 	"fmt"
-	"io/ioutil"
-	"net"
-	"os"
-	"strings"
-	"syscall"
 	"time"
 
 	"github.com/gizak/termui/v3"
 	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh/terminal"
 
-	"miwifi-termui/client"
-	"miwifi-termui/ui"
+	"miwifi-termui/internal/client"
+	"miwifi-termui/internal/ui"
 )
 
-var version = "n/a"
-
-func newApp(mac, host, username, password string, interval time.Duration, logger *log.Logger) *application {
-	var app application
+// New creates and returns new application
+func New(mac, host, username, password string, interval time.Duration, logger *log.Logger) *Application {
+	var app Application
 
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryMax = 3
@@ -43,7 +32,7 @@ func newApp(mac, host, username, password string, interval time.Duration, logger
 	return &app
 }
 
-type application struct {
+type Application struct {
 	client   *client.Client
 	logger   *log.Logger
 	username string
@@ -51,7 +40,7 @@ type application struct {
 	interval time.Duration
 }
 
-func (app *application) Run(ctlName string) (code int) {
+func (app *Application) Run(ctlName string) (code int) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -133,7 +122,7 @@ Loop:
 	return 0
 }
 
-func (app *application) startPollingStat(ctx context.Context, interval time.Duration) ui.StreamStatRead {
+func (app *Application) startPollingStat(ctx context.Context, interval time.Duration) ui.StreamStatRead {
 	stream := make(chan client.Stat, 1)
 
 	go func() {
@@ -173,7 +162,7 @@ func (app *application) startPollingStat(ctx context.Context, interval time.Dura
 	return stream
 }
 
-func (app *application) startPollingBand(ctx context.Context, interval time.Duration) ui.StreamBandRead {
+func (app *Application) startPollingBand(ctx context.Context, interval time.Duration) ui.StreamBandRead {
 	stream := make(chan client.Band, 1)
 
 	go func() {
@@ -211,83 +200,4 @@ func (app *application) startPollingBand(ctx context.Context, interval time.Dura
 	}()
 
 	return stream
-}
-
-func getMacAddr() (addr string) {
-	interfaces, err := net.Interfaces()
-	if err == nil {
-		for _, i := range interfaces {
-			if i.Flags&net.FlagUp != 0 && !bytes.Equal(i.HardwareAddr, nil) {
-				addr = i.HardwareAddr.String()
-				break
-			}
-		}
-	}
-	return
-}
-
-func main() {
-	var (
-		versionFlag  = flag.Bool("version", false, "application version")
-		debugFlag    = flag.Bool("debug", false, "run application in debug mode")
-		hostFlag     = flag.String("host", "", "MiWiFi host address")
-		usernameFlag = flag.String("username", "admin", "username for login")
-		passwordFlag = flag.String("password", "", "password for login")
-		intervalFlag = flag.Duration("interval", time.Second*10, "fetch data interval")
-		uiFlag       = flag.String("ui", "dash", `ui controller {"dash", "cpu", "dev", "info", "mem", "net"}`)
-	)
-
-	flag.Parse()
-
-	if *versionFlag {
-		fmt.Println(version)
-		os.Exit(0)
-	}
-
-	var prompt bool
-
-	if *hostFlag == "" {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Enter host: ")
-		host, err := reader.ReadString('\n')
-		if err != nil {
-			panic(err)
-		}
-		*hostFlag = strings.TrimSpace(host)
-		prompt = true
-	}
-
-	if !strings.HasPrefix(*hostFlag, "http://") {
-		*hostFlag = "http://" + *hostFlag
-	}
-
-	if *passwordFlag == "" {
-		fmt.Print("Enter admin password: ")
-		bytePassword, err := terminal.ReadPassword(syscall.Stdin)
-		if err != nil {
-			panic(err)
-		}
-		*passwordFlag = strings.TrimSpace(string(bytePassword))
-		prompt = true
-	}
-
-	if prompt {
-		fmt.Println()
-	}
-
-	logger := log.New()
-	logger.Out = ioutil.Discard
-
-	if *debugFlag {
-		logger.SetLevel(log.DebugLevel)
-
-		file, err := os.OpenFile("MiWIFI-termui.out.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
-		if err != nil {
-			panic(errors.New("failed to log to file"))
-		}
-		logger.Out = file
-	}
-
-	app := newApp(getMacAddr(), *hostFlag, *usernameFlag, *passwordFlag, *intervalFlag, logger)
-	os.Exit(app.Run(*uiFlag))
 }

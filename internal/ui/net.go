@@ -8,8 +8,8 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-termui/client"
-	"miwifi-termui/humanize"
+	"miwifi-termui/internal/client"
+	"miwifi-termui/internal/humanize"
 )
 
 // NewNETController creates and returns network status UI controller.
