@@ -23,19 +23,6 @@ const logFile = "miwifi.out.log"
 
 var version = "n/a"
 
-func getMacAddr() (addr string) {
-	interfaces, err := net.Interfaces()
-	if err == nil {
-		for _, i := range interfaces {
-			if i.Flags&net.FlagUp != 0 && !bytes.Equal(i.HardwareAddr, nil) {
-				addr = i.HardwareAddr.String()
-				break
-			}
-		}
-	}
-	return
-}
-
 func main() {
 	var (
 		versionFlag  = flag.Bool("version", false, "application version")
@@ -100,4 +87,17 @@ func main() {
 
 	a := app.New(getMacAddr(), *hostFlag, *usernameFlag, *passwordFlag, *intervalFlag, logger)
 	os.Exit(a.Run(*uiFlag))
+}
+
+func getMacAddr() (addr string) {
+	interfaces, err := net.Interfaces()
+	if err == nil {
+		for _, i := range interfaces {
+			if i.Flags&net.FlagUp != 0 && !bytes.Equal(i.HardwareAddr, nil) {
+				addr = i.HardwareAddr.String()
+				break
+			}
+		}
+	}
+	return
 }
