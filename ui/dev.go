@@ -9,8 +9,8 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 
-	"miwifi-termui/internal/client"
-	"miwifi-termui/internal/humanize"
+	"miwifi-termui/client"
+	"miwifi-termui/humanize"
 )
 
 const maxDevices = 16

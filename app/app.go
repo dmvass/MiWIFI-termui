@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 
-	"miwifi-termui/internal/client"
-	"miwifi-termui/internal/ui"
+	"miwifi-termui/client"
+	"miwifi-termui/ui"
 )
 
 // New creates and returns new application

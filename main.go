@@ -16,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"miwifi-termui/internal/app"
+	"miwifi-termui/app"
 )
 
 const logFile = "miwifi.out.log"
